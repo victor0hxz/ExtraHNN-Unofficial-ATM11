@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "ABA",
+    "CDC",
+    "EFE"
+  ],
+  "key": {
+    "A": "minecraft:netherite_sword",
+    "B": "minecraft:ender_eye",
+    "C": "extrahnn:blank_extra_data_model",
+    "D": "minecraft:blaze_rod",
+    "E": "minecraft:diamond",
+    "F": "minecraft:netherite_ingot"
+  },
+  "result": {
+    "id": "extrahnn:upgrade_speed"
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    " A ",
+    "BCB",
+    "DED"
+  ],
+  "key": {
+    "A": "hostilenetworks:prediction_matrix",
+    "B": "extrahnn:ultimate_loot_fabricator_v1",
+    "C": "hostilenetworks:loot_fabricator",
+    "D": "minecraft:netherite_block",
+    "E": "minecraft:redstone_block"
+  },
+  "result": {
+    "id": "extrahnn:ultimate_loot_fabricator_v2"
+  }
+}

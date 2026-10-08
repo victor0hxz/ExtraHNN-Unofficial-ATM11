@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "ABA",
+    "CDC",
+    "AEA"
+  ],
+  "key": {
+    "A": "minecraft:diamond",
+    "B": "minecraft:quartz",
+    "C": "minecraft:redstone_block",
+    "D": "hostilenetworks:blank_data_model",
+    "E": "minecraft:netherite_scrap"
+  },
+  "result": {
+    "id": "extrahnn:blank_extra_data_model"
+  }
+}

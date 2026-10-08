@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    " A ",
+    "BCB",
+    "DED"
+  ],
+  "key": {
+    "A": "minecraft:ender_eye",
+    "B": "minecraft:diamond",
+    "C": "hostilenetworks:sim_chamber",
+    "D": "minecraft:netherite_ingot",
+    "E": "extrahnn:blank_extra_data_model"
+  },
+  "result": {
+    "id": "extrahnn:ultimate_sim_chamber_v1"
+  }
+}

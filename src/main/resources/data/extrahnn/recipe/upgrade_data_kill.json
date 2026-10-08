@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "ABC",
+    "DED",
+    "FGF"
+  ],
+  "key": {
+    "A": "minecraft:diamond_sword",
+    "B": "minecraft:blaze_rod",
+    "C": "minecraft:diamond_axe",
+    "D": "minecraft:netherite_ingot",
+    "E": "extrahnn:blank_extra_data_model",
+    "F": "minecraft:ender_eye",
+    "G": "extrahnn:upgrade_speed"
+  },
+  "result": {
+    "id": "extrahnn:upgrade_data_kill"
+  }
+}

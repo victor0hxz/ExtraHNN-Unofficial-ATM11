@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "ABA",
+    "CDE",
+    "FGF"
+  ],
+  "key": {
+    "A": "minecraft:diamond",
+    "B": "minecraft:nether_star",
+    "C": "extrahnn:upgrade_data_kill",
+    "D": "extrahnn:blank_extra_data_model",
+    "E": "extrahnn:upgrade_speed",
+    "F": "minecraft:netherite_ingot",
+    "G": "minecraft:comparator"
+  },
+  "result": {
+    "id": "extrahnn:upgrade_module_stack"
+  }
+}

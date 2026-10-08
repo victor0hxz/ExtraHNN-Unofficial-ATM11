@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "ABA",
+    "CDC",
+    "AEA"
+  ],
+  "key": {
+    "A": "extrahnn:blank_extra_data_model",
+    "B": "minecraft:comparator",
+    "C": "minecraft:ender_eye",
+    "D": "minecraft:netherite_block",
+    "E": "minecraft:diamond"
+  },
+  "result": {
+    "id": "extrahnn:merger_camera"
+  }
+}

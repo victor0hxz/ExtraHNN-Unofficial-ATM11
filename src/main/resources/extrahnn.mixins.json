@@ -1,0 +1,16 @@
+{
+    "required": true,
+    "package": "net.lmor.extrahnn.mixin",
+    "compatibilityLevel": "JAVA_25",
+    "mixins": [
+        "MixinHostileEvents",
+        "SettingLootFabTileEntity",
+        "SettingSimChamberTileEntity"
+    ],
+    "injectors": {
+        "defaultRequire": 1
+    },
+    "overwrites": {
+        "requireAnnotations": true
+  }
+}

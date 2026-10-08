@@ -1,0 +1,124 @@
+plugins {
+    id 'java-library'
+    id 'maven-publish'
+    id 'net.neoforged.moddev' version '2.0.146'
+    id 'idea'
+    id 'io.freefair.lombok' version "9.5.0"
+}
+
+tasks.named('wrapper', Wrapper).configure {
+    distributionType = Wrapper.DistributionType.BIN
+}
+
+version = minecraft_version + "-" + mod_version + "-atm11-0.9.0"
+group = mod_group_id
+
+base {
+    archivesName = mod_id
+}
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(25)
+
+neoForge {
+    version = project.neo_version
+
+
+
+    runs {
+        client {
+            client()
+        }
+
+        server {
+            server()
+            programArgument '--nogui'
+        }
+
+        data {
+            data()
+            programArguments.addAll '--mod', project.mod_id, '--all', '--output', file('src/generated/resources/').getAbsolutePath(), '--existing', file('src/main/resources/').getAbsolutePath()
+        }
+
+        configureEach {
+            systemProperty 'forge.logging.markers', 'REGISTRIES'
+            logLevel = org.slf4j.event.Level.DEBUG
+        }
+    }
+
+    mods {
+        "${mod_id}" {
+            sourceSet(sourceSets.main)
+        }
+    }
+}
+
+sourceSets.main.resources {
+    srcDir('src/generated/resources')
+    exclude("src/generated/**/.cache")
+}
+
+configurations {
+    runtimeClasspath.extendsFrom localRuntime
+}
+
+repositories {
+    maven {
+        url "https://cursemaven.com"
+        content {
+            includeGroup "curse.maven"
+        }
+    }
+}
+
+dependencies {
+ implementation files(fileTree('libs') { include '*.jar' })
+
+ compileOnly 'org.projectlombok:lombok:1.18.44'
+ annotationProcessor 'org.projectlombok:lombok:1.18.44'
+ compileOnly 'org.jetbrains:annotations:26.0.1'
+}
+
+var generateModMetadata = tasks.register("generateModMetadata", ProcessResources) {
+    var replaceProperties = [
+            minecraft_version                   : minecraft_version,
+            minecraft_version_range             : minecraft_version_range,
+            neo_version                         : neo_version,
+            loader_version_range                : loader_version_range,
+            mod_id                              : mod_id,
+            mod_name                            : mod_name,
+            mod_license                         : mod_license,
+            mod_version                         : mod_version,
+            mod_authors                         : mod_authors,
+            mod_description                     : mod_description,
+            hostileneuralnetworks_version_id    : hostileneuralnetworks_version_id,
+            placebo_version_id                  : placebo_version_id
+    ]
+    inputs.properties replaceProperties
+    expand replaceProperties
+    from "src/main/meta"
+    into "build/generated/sources/modMetadata"
+}
+
+sourceSets.main.resources.srcDir generateModMetadata
+neoForge.ideSyncTask generateModMetadata
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}
+
+idea {
+    module {
+        downloadSources = true
+        downloadJavadoc = true
+    }
+}
+tasks.withType(JavaCompile).configureEach { options.compilerArgs += ["-Xmaxerrs", "1000"] }
+if (providers.gradleProperty('portSmoke').isPresent()) {
+ sourceSets.test.compileClasspath += sourceSets.main.compileClasspath
+ neoForge.mods.extrahnn.sourceSet(sourceSets.test)
+ neoForge.runs.configureEach { systemProperty 'port.smoke', 'true' }
+}
+sourceSets.test.compileClasspath += sourceSets.main.compileClasspath + sourceSets.main.output
+neoForge.addModdingDependenciesTo(sourceSets.test)
+// Functional fixtures run inside Minecraft with -PportSmoke, not through JUnit.
+tasks.withType(Test).configureEach { failOnNoDiscoveredTests = false }

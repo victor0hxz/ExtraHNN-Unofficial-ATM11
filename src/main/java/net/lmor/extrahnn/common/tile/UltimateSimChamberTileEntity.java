@@ -1,0 +1,471 @@
+package net.lmor.extrahnn.common.tile;
+
+import dev.shadowsoffire.hostilenetworks.data.DataModel;
+import dev.shadowsoffire.hostilenetworks.util.RedstoneState;
+import dev.shadowsoffire.placebo.block_entity.TickingBlockEntity;
+import net.lmor.extrahnn.compat.InternalItemHandler;
+import dev.shadowsoffire.hostilenetworks.util.ModifiableEnergyStorage;
+import dev.shadowsoffire.placebo.menu.SimpleDataSlots;
+import dev.shadowsoffire.placebo.menu.SimpleDataSlots.IDataAutoRegister;
+import dev.shadowsoffire.placebo.dynreg.DynamicHolder;
+import lombok.Getter;
+import lombok.Setter;
+import net.lmor.extrahnn.ExtraHostile;
+import net.lmor.extrahnn.ExtraHostileConfig;
+import net.lmor.extrahnn.api.IRegTile;
+import net.lmor.extrahnn.api.ISettingCard;
+import net.lmor.extrahnn.api.Version;
+import net.lmor.extrahnn.common.item.ExtraDataModelItem;
+import net.lmor.extrahnn.data.ExtraDataModelInstance;
+import net.lmor.extrahnn.data.ExtraModelTier;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.core.NonNullList;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.DataSlot;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.state.BlockState;
+import org.jetbrains.annotations.NotNull;
+
+import java.util.*;
+import java.util.function.Consumer;
+
+public class UltimateSimChamberTileEntity extends BlockEntity implements TickingBlockEntity, IDataAutoRegister, IRegTile, ISettingCard {
+
+    @Getter
+    protected final SimItemHandler inventory = new SimItemHandler();
+    @Getter
+    protected final ModifiableEnergyStorage energy;
+    @Getter
+    protected final SimpleDataSlots data = new SimpleDataSlots();
+
+    @Getter
+    protected int runtime = 0;
+    @Getter
+    protected int predictionSuccess = 0;
+    @Getter
+    protected FailureState failState = FailureState.NONE;
+    @Getter @Setter
+    protected RedstoneState redstoneState = RedstoneState.IGNORED;
+
+    protected ExtraDataModelInstance currentModel = ExtraDataModelInstance.EMPTY;
+    private boolean checkOutput = true;
+
+    private Version version;
+
+    public int CAP;
+    public int DURATION;
+
+    public boolean extractDataModel = false;
+
+    public UltimateSimChamberTileEntity(BlockPos pos, BlockState state, BlockEntityType<UltimateSimChamberTileEntity> type, Version version) {
+        super(type, pos, state);
+        this.version = version;
+
+        setConfig();
+        energy = new ModifiableEnergyStorage(CAP, CAP);
+
+        this.data.addData(() -> this.runtime, v -> this.runtime = v);
+        this.data.addData(() -> this.predictionSuccess, v -> this.predictionSuccess = v);
+        this.data.addData(() -> this.failState.ordinal(), v -> this.failState = FailureState.values()[v]);
+        this.data.addData(() -> this.redstoneState.ordinal(), v -> this.redstoneState = RedstoneState.values()[v]);
+        this.data.addData(() -> this.extractDataModel, v -> this.extractDataModel = v);
+        this.data.addEnergy(this.energy);
+        this.energy.setMaxExtract(0);
+    }
+
+    @Override
+    public void registerSlots(Consumer<DataSlot> consumer) {
+        this.data.register(consumer);
+    }
+
+    @Override
+    public void saveAdditional(net.minecraft.world.level.storage.ValueOutput tag) {
+        super.saveAdditional(tag);
+        this.inventory.serialize(tag.child("inventory"));
+        tag.putInt("energy", this.energy.getEnergyStored());
+
+        tag.putInt("runtime", this.runtime);
+        tag.putInt("predSuccess", this.predictionSuccess);
+        tag.putInt("failState", this.failState.ordinal());
+        tag.putInt("redstoneState", this.redstoneState.ordinal());
+
+        tag.putBoolean("extractModel", extractDataModel);
+        tag.putString("versionBlockEntity", this.version.getId());
+    }
+
+    @Override
+    public void loadAdditional(net.minecraft.world.level.storage.ValueInput tag) {
+        super.loadAdditional(tag);
+        this.inventory.deserialize(tag.childOrEmpty("inventory"));
+        this.energy.setEnergy(tag.getIntOr("energy", 0));
+
+        ItemStack model = this.inventory.getStackInSlot(0);
+        ExtraDataModelInstance cModel = this.getOrLoadModel(model);
+        if (cModel.isValid() && !model.isEmpty()){
+            this.currentModel = new ExtraDataModelInstance(model);
+        }
+
+        this.runtime = tag.getIntOr("runtime", 0);
+        this.predictionSuccess = tag.getIntOr("predSuccess", 0);
+        this.failState = FailureState.values()[tag.getIntOr("failState", 0)];
+        this.redstoneState = RedstoneState.values()[tag.getIntOr("redstoneState", 0)];
+
+        this.extractDataModel = tag.getBooleanOr("extractModel", false);
+
+        this.version = Version.getVersion(tag.getStringOr("versionBlockEntity", ""));
+    }
+
+    @Override
+    public CompoundTag saveSetting(HolderLookup.Provider regs) {
+        CompoundTag tag = new CompoundTag();
+
+        ItemStack item = this.inventory.getStackInSlot(0);
+        if (!item.isEmpty()){
+            CompoundTag saveTag = new CompoundTag();
+            tag.put("dataModel", ItemStack.CODEC.encodeStart(regs.createSerializationContext(net.minecraft.nbt.NbtOps.INSTANCE), item).getOrThrow());
+        }
+        tag.putString("config", getClass().getName());
+        tag.putInt("redstoneState", this.redstoneState.ordinal());
+        tag.putBoolean("extractDataModel", extractDataModel);
+        return tag;
+    }
+
+    @Override
+    public boolean loadSetting(HolderLookup.@NotNull Provider regs, CompoundTag tag, Player player) {
+        if (!tag.contains("config") || !tag.getStringOr("config", "").equals(getClass().getName())) return false;
+
+        this.redstoneState = RedstoneState.values()[tag.getIntOr("redstoneState", 0)];
+        this.extractDataModel = tag.getBooleanOr("extractDataModel", false);
+
+        CompoundTag saveTag = tag.getCompoundOrEmpty("dataModel");
+        Inventory playerInv = player.getInventory();
+
+        ItemStack item = ItemStack.CODEC.parse(regs.createSerializationContext(net.minecraft.nbt.NbtOps.INSTANCE), saveTag).result().orElse(ItemStack.EMPTY);
+        if (item.isEmpty()) return false;
+        setModelInv(item, playerInv);
+        return true;
+    }
+
+    private void setModelInv(ItemStack findItem, Inventory playerInv){
+        List<DynamicHolder<DataModel>> findModels = findItem.getOrDefault(ExtraHostile.Components.EXTRA_DATA_MODEL, List.of());
+        if (findModels.isEmpty()) return;
+
+        for(int i = 0; i < playerInv.getContainerSize(); ++i) {
+            ItemStack itemInv = playerInv.getItem(i).copy();
+            if (itemInv.isEmpty() || !itemInv.is(findItem.getItem()) || !(itemInv.getItem() instanceof ExtraDataModelItem)) continue;
+
+            List<DynamicHolder<DataModel>> itemInvModels = itemInv.getOrDefault(ExtraHostile.Components.EXTRA_DATA_MODEL, List.of());
+            for (DynamicHolder<DataModel> holder: itemInvModels) {
+                if (findModels.contains(holder)) {
+                    playerInv.removeItem(i, 1);
+
+                    if (!this.inventory.getStackInSlot(0).isEmpty()){
+                        playerInv.add(this.inventory.getStackInSlot(0));
+                        this.inventory.setStackInSlot(0, ItemStack.EMPTY);
+                    }
+
+                    this.inventory.setStackInSlot(0, itemInv);
+                    return;
+                }
+            }
+        }
+    }
+
+    @Override
+    public void serverTick(Level level, BlockPos pos, BlockState state) {
+        if (this.inventory.getStackInSlot(0).isEmpty()) {
+            this.failState = FailureState.MODEL;
+            this.runtime = 0;
+            return;
+        }
+
+        if (this.inventory.getStackInSlot(1).isEmpty() && this.runtime == 0){
+            this.failState = FailureState.INPUT;
+            return;
+        }
+
+        ItemStack model = this.inventory.getStackInSlot(0);
+        if (model.isEmpty()) {
+            this.failState = FailureState.MODEL;
+            this.runtime = 0;
+            return;
+        }
+
+        ExtraDataModelInstance oldModel = this.currentModel;
+        this.currentModel = this.getOrLoadModel(model);
+        if (oldModel != this.currentModel) this.runtime = 0;
+        if (!this.currentModel.isValid()) return;
+
+        if (!this.currentModel.getTier().data().canSim()) {
+            this.failState = FailureState.FAULTY;
+            this.runtime = 0;
+            return;
+        }
+
+        startWork(level, model);
+    }
+
+    public void startWork(Level level, ItemStack model){
+        if (this.runtime == 0) {
+            if (this.canStartSimulation()) {
+                this.runtime = DURATION;
+                this.predictionSuccess = this.currentModel.rollAllPredictions(level.getRandom());
+                this.inventory.getStackInSlot(1).shrink(version.getMultiplier() * 4);
+                this.setChanged();
+            }
+            return;
+
+        } else if (this.hasPowerFor(this.currentModel)) {
+            if (!this.getRedstoneState().matches(level.hasNeighborSignal(worldPosition))){
+                this.failState = FailureState.REDSTONE;
+                return;
+            }
+
+            this.failState = FailureState.NONE;
+            if (--this.runtime == 0) setResult(model);
+            else {
+                this.energy.setEnergy(this.energy.getEnergyStored() - this.currentModel.simCost());
+                this.setChanged();
+            }
+            return;
+        }
+
+        this.failState = FailureState.ENERGY_MID_CYCLE;
+    }
+
+    public boolean canStartSimulation() {
+        if (!checkOutput && this.failState == FailureState.OUTPUT) return false;
+
+        if (!this.redstoneState.matches(Objects.requireNonNull(this.level).hasNeighborSignal(this.worldPosition))) {
+            this.failState = FailureState.REDSTONE;
+            return false;
+        }
+
+        if (this.inventory.getStackInSlot(1).getCount() < 4 * version.getMultiplier()){
+            this.failState = FailureState.COUNT;
+            return false;
+        }
+
+        if (this.energy.getEnergyStored() < this.currentModel.simCost()){
+            this.failState = FailureState.ENERGY;
+            return false;
+        }
+
+        checkOutput = false;
+
+        Map<DropType, List<ItemStack>> dropData = Map.of(
+                DropType.BASE, new ArrayList<>(),
+                DropType.PREDICATE, new ArrayList<>()
+        );
+
+        for (DynamicHolder<DataModel> model : this.currentModel.getModels()) {
+            if (!model.isBound()) continue;
+
+            ItemStack baseDrop = dev.shadowsoffire.hostilenetworks.util.Templates.create(model.get().baseDrop());
+            if (baseDrop != null && !baseDrop.isEmpty()) dropData.get(DropType.BASE).add(baseDrop);
+
+            // not checked, its getPredictionDrop() always not null ItemStack and not empty ItemStack
+            if (this.didPredictionSucceed()){
+            dropData.get(DropType.PREDICATE).add(model.get().getPredictionDrop());
+            }
+        }
+
+        boolean dropSet = setItem(dropData, true);
+        this.failState = dropSet ? FailureState.NONE: FailureState.OUTPUT;
+        return dropSet;
+    }
+
+    public void setResult(ItemStack itemModel) {
+        Map<DropType, List<ItemStack>> dropData = Map.of(
+                DropType.BASE, new ArrayList<>(),
+                DropType.PREDICATE, new ArrayList<>()
+        );
+
+        for (DynamicHolder<DataModel> model: this.currentModel.getModels()){
+            if (!model.isBound()) continue;
+
+            var baseDrop = dev.shadowsoffire.hostilenetworks.util.Templates.create(model.get().baseDrop());
+            if (baseDrop != null && !baseDrop.isEmpty()){
+                baseDrop.setCount(version.getMultiplier());
+                dropData.get(DropType.BASE).add(baseDrop);
+            }
+
+            // only add prediction drop if prediction succeeded
+            if (this.didPredictionSucceed()) {
+                var predDrop = model.get().getPredictionDrop();
+                predDrop.setCount(version.getMultiplier());
+                dropData.get(DropType.PREDICATE).add(predDrop);
+            }
+        }
+
+        setItem(dropData, false);
+
+        ExtraModelTier tier = this.currentModel.getTier();
+        if (!tier.isMax()) {
+            int newData = this.currentModel.getData() + this.currentModel.getDataPerKill();
+            this.currentModel.setData(newData);
+        }
+        ExtraDataModelItem.setIters(itemModel, ExtraDataModelItem.getIters(itemModel) + 1);
+        this.setChanged();
+    }
+
+    public boolean setItem(Map<DropType, List<ItemStack>> dropData, boolean simulate){
+        List<Boolean> isAdd = new ArrayList<>();
+        for (var entry: dropData.entrySet()){
+            DropType type = entry.getKey();
+            List<ItemStack> listDrops = entry.getValue();
+            if (listDrops.isEmpty()) continue;
+
+            isAdd.add(type.setItemDrop(listDrops, inventory, simulate));
+        }
+
+        return isAdd.stream().allMatch(b -> b);
+    }
+
+    public boolean hasPowerFor(ExtraDataModelInstance model) {
+        return this.energy.getEnergyStored() >= model.simCost();
+    }
+
+    protected ExtraDataModelInstance getOrLoadModel(ItemStack stack) {
+        return this.currentModel.getSourceStack() == stack ? this.currentModel : new ExtraDataModelInstance(stack);
+    }
+
+    public int getEnergyStored() {
+        return this.energy.getEnergyStored();
+    }
+
+    public boolean didPredictionSucceed() {
+        return this.predictionSuccess > 0;
+    }
+
+    public class SimItemHandler extends InternalItemHandler {
+
+        public SimItemHandler() {
+            super(10);
+        }
+
+        @Override
+        public boolean isItemValid(int slot, @NotNull ItemStack stack) {
+            if (slot == 0) return stack.getItem() instanceof ExtraDataModelItem;
+            return slot != 1 || ExtraDataModelItem.matchesModelInput(this.getStackInSlot(0), stack);
+        }
+
+        @Override
+        public @NotNull ItemStack insertItem(int slot, @NotNull ItemStack stack, boolean simulate) {
+            return slot >= 2 ? stack : super.insertItem(slot, stack, simulate);
+        }
+
+        public ItemStack insertDropInternal(int slot, ItemStack stack, boolean simulate) {
+            return super.insertItem(slot, stack, simulate);
+        }
+
+        @Override
+        public @NotNull ItemStack extractItem(int slot, int amount, boolean simulate) {
+            if (slot <= 1 && !extractDataModel) return ItemStack.EMPTY;
+            return super.extractItem(slot, amount, simulate);
+        }
+
+        @Override
+        protected void onContentsChanged(int slot) {
+            checkOutput = true;
+            UltimateSimChamberTileEntity.this.setChanged();
+        }
+
+        public NonNullList<ItemStack> getItems() {
+            return this.stacks;
+        }
+
+        public SimItemHandler copy(){
+            SimItemHandler copyInv = new SimItemHandler();
+            NonNullList<ItemStack> source = this.getItems();
+            NonNullList<ItemStack> target = copyInv.getItems();
+
+            for (int i = 0; i < source.size(); i++) target.set(i, source.get(i).copy());
+
+            return copyInv;
+        }
+    }
+
+    public enum FailureState {
+        NONE("hostilenetworks.fail.none"),
+        OUTPUT("hostilenetworks.fail.output"),
+        ENERGY("hostilenetworks.fail.energy"),
+        INPUT("hostilenetworks.fail.input"),
+        MODEL("hostilenetworks.fail.model"),
+        FAULTY("hostilenetworks.fail.faulty"),
+        ENERGY_MID_CYCLE("hostilenetworks.fail.energy_mid_cycle"),
+        REDSTONE("hostilenetworks.fail.redstone"),
+        COUNT("extrahnn.fail.count");
+
+        private final String id;
+
+        FailureState(String id) {
+            this.id = id;
+        }
+
+        public String getKey() {
+            return id;
+        }
+    }
+
+    public void setConfig(){
+        switch (version.getId().toLowerCase()) {
+            case "v2" -> {
+                CAP = ExtraHostileConfig.ultimateSimV2PowerCap;
+                DURATION = ExtraHostileConfig.ultimateSimV2PowerDuration;
+            }
+            case "v3" -> {
+                CAP = ExtraHostileConfig.ultimateSimV3PowerCap;
+                DURATION = ExtraHostileConfig.ultimateSimV3PowerDuration;
+            }
+            case "v4" -> {
+                CAP = ExtraHostileConfig.ultimateSimV4PowerCap;
+                DURATION = ExtraHostileConfig.ultimateSimV4PowerDuration;
+            }
+            default -> {
+                CAP = ExtraHostileConfig.ultimateSimV1PowerCap;
+                DURATION = ExtraHostileConfig.ultimateSimV1PowerDuration;
+            }
+        }
+    }
+
+    public enum DropType {
+        BASE(new int[]{2, 3, 4, 5}), PREDICATE(new int[]{6, 7, 8, 9});
+
+        final int[] outputSlots;
+        DropType(int[] slots){
+            outputSlots = slots;
+        }
+
+        public boolean setItemDrop(List<ItemStack> listDrops, SimItemHandler inventory, boolean simulate){
+            return insertDropsIntoSlots(listDrops, inventory, outputSlots, simulate);
+        }
+
+        private boolean insertDropsIntoSlots(List<ItemStack> listDrops, SimItemHandler inventory, int[] slots, boolean simulate) {
+            SimItemHandler target = simulate ? inventory.copy() : inventory;
+
+            for (ItemStack drop : listDrops) {
+                ItemStack remaining = drop.copy();
+
+                for (int slot : slots) {
+                    if (remaining.isEmpty()) break;
+                    remaining = target.insertDropInternal(slot, remaining, false);
+                }
+
+                if (!remaining.isEmpty()) return false;
+            }
+            return true;
+        }
+    }
+    @Override
+    public void preRemoveSideEffects(net.minecraft.core.BlockPos pos, net.minecraft.world.level.block.state.BlockState state) {
+        net.minecraft.world.Containers.dropContents(this.level, pos, this.inventory.getItems());
+        super.preRemoveSideEffects(pos, state);
+    }
+}

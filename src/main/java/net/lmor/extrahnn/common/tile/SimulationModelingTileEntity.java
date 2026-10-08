@@ -1,0 +1,241 @@
+package net.lmor.extrahnn.common.tile;
+
+import dev.shadowsoffire.hostilenetworks.data.DataModelInstance;
+import dev.shadowsoffire.hostilenetworks.data.ModelTier;
+import dev.shadowsoffire.hostilenetworks.item.DataModelItem;
+import dev.shadowsoffire.placebo.block_entity.TickingBlockEntity;
+import net.lmor.extrahnn.compat.InternalItemHandler;
+import dev.shadowsoffire.hostilenetworks.util.ModifiableEnergyStorage;
+import dev.shadowsoffire.placebo.menu.SimpleDataSlots;
+import dev.shadowsoffire.placebo.menu.SimpleDataSlots.IDataAutoRegister;
+import lombok.Getter;
+import net.lmor.extrahnn.EHNNUtils;
+import net.lmor.extrahnn.ExtraHostile;
+import net.lmor.extrahnn.ExtraHostileConfig;
+import net.lmor.extrahnn.api.IRegTile;
+import net.lmor.extrahnn.common.item.ExtraDataModelItem;
+import net.lmor.extrahnn.common.item.UpgradeMachine;
+import net.lmor.extrahnn.data.ExtraDataModelInstance;
+import net.lmor.extrahnn.data.ExtraModelTier;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.core.NonNullList;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.inventory.DataSlot;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
+import org.jetbrains.annotations.NotNull;
+
+import java.util.function.Consumer;
+
+public class SimulationModelingTileEntity extends BlockEntity implements TickingBlockEntity, IDataAutoRegister, IRegTile {
+
+    private final static int SIZE_SLOTS = 3;
+    @Getter
+    protected final SimulatorModelingItemHandler inventory = new SimulatorModelingItemHandler();
+    @Getter
+    protected final ModifiableEnergyStorage energy = new ModifiableEnergyStorage(ExtraHostileConfig.simulationModelingPowerCap, ExtraHostileConfig.simulationModelingPowerCap);
+    protected final SimpleDataSlots data = new SimpleDataSlots();
+    @Getter
+    protected int runtime = ExtraHostileConfig.simulationModelingPowerDuration;
+
+    @Getter
+    private int runtimeUpgrade = runtime;
+
+    @Getter
+    private int energyCost = ExtraHostileConfig.simulationModelingPowerCost;
+
+    private boolean upgradeModuleStack;
+    private boolean upgradeDataKill;
+
+    private boolean startCraft = false;
+
+    public SimulationModelingTileEntity(BlockPos pos, BlockState state) {
+        super(ExtraHostile.TileEntities.SIMULATOR_MODELING, pos, state);
+
+        this.data.addData(() -> this.runtime, v -> this.runtime = v);
+        this.data.addEnergy(this.energy);
+        this.energy.setMaxExtract(0);
+    }
+
+    @Override
+    public void saveAdditional(net.minecraft.world.level.storage.ValueOutput tag) {
+        super.saveAdditional(tag);
+        this.inventory.serialize(tag.child("inventory"));
+        tag.putInt("energy", this.energy.getEnergyStored());
+        tag.putInt("runtime", this.runtime);
+        tag.putBoolean("startCraft", this.startCraft);
+    }
+
+    @Override
+    public void loadAdditional(net.minecraft.world.level.storage.ValueInput tag) {
+        super.loadAdditional(tag);
+        this.inventory.deserialize(tag.childOrEmpty("inventory"));
+        this.energy.setEnergy(tag.getIntOr("energy", 0));
+        this.runtime = tag.getIntOr("runtime", 0);
+        this.startCraft = tag.getBooleanOr("startCraft", false);
+
+        checkUpgrade();
+    }
+
+    @Override
+    public void registerSlots(Consumer<DataSlot> consumer) {
+        this.data.register(consumer);
+    }
+
+    public void checkUpgrade(){
+        boolean upgradeSpeed = false;
+        this.runtime = 0;
+        upgradeModuleStack = false;
+        upgradeDataKill = false;
+        energyCost = ExtraHostileConfig.simulationModelingPowerCost;
+        runtimeUpgrade = ExtraHostileConfig.simulationModelingPowerDuration;
+
+        for (int i = 1; i < SIZE_SLOTS; i++){
+            ItemStack upgrade = this.inventory.getStackInSlot(i);
+            if (upgrade.is(ExtraHostile.Items.UPGRADE_SPEED)) upgradeSpeed = true;
+            if (upgrade.is(ExtraHostile.Items.UPGRADE_MODULE_STACK)) upgradeModuleStack = true;
+            if (upgrade.is(ExtraHostile.Items.UPGRADE_DATA_KILL)) upgradeDataKill = true;
+        }
+
+        energyCost = upgradeModuleStack ? Math.min(ExtraHostileConfig.simulationModelingPowerCap, ExtraHostileConfig.upgradeModuleStackCost) : energyCost;
+
+        if (upgradeSpeed){
+            runtimeUpgrade = (int) Math.max(0, ExtraHostileConfig.simulationModelingPowerDuration * (1 - (float) ExtraHostileConfig.upgradeSpeed / 100));
+            energyCost = (int) Math.min(ExtraHostileConfig.simulationModelingPowerCap, energyCost * ExtraHostileConfig.upgradeSpeedEnergy);
+
+            if (runtimeUpgrade < runtime) runtime = runtimeUpgrade;
+        }
+
+    }
+
+    @Override
+    public void serverTick(Level level, BlockPos pos, BlockState state) {
+        if (!startCraft) return;
+
+        if(this.inventory.getStackInSlot(0).isEmpty()) {
+            this.runtime = 0;
+            return;
+        }
+
+        ItemStack item = this.inventory.getStackInSlot(0);
+
+        if (( item.getItem() instanceof DataModelItem && new DataModelInstance(item, 0).getTier().isMax()) ||
+                (item.getItem() instanceof ExtraDataModelItem && new ExtraDataModelInstance(item).getTier().isMax())) {
+            startCraft = false;
+            return;
+        }
+
+        if (this.runtime == 0){
+            this.runtime = runtimeUpgrade;
+            this.setChanged();
+
+        } else if (this.getEnergyStored() >= energyCost) {
+            if (--this.runtime == 0) {
+                result();
+            } else {
+                this.energy.setEnergy(this.energy.getEnergyStored() - energyCost);
+                this.setChanged();
+            }
+        }
+    }
+
+    public void result(){
+        ItemStack item = this.inventory.getStackInSlot(0);
+        if (item.getItem() instanceof DataModelItem) {
+
+            DataModelInstance model = new DataModelInstance(item, 0);
+
+            ModelTier tier = model.getTier();
+            if (!tier.isMax()) {
+                if (upgradeModuleStack) model.setData(model.getNextTierData());
+                else {
+                    int newData = model.getData() + model.getDataGained() * (upgradeDataKill ? ExtraHostileConfig.upgradeDataKill : 1);
+                    int resData = Math.min(newData, model.getNextTierData());
+                    model.setData(resData);
+                }
+            }
+
+            DataModelItem.setIters(item, DataModelItem.getIters(item) + (upgradeDataKill ? ExtraHostileConfig.upgradeDataKill : 1));
+            this.setChanged();
+
+        } else if (item.getItem() instanceof ExtraDataModelItem) {
+            ExtraDataModelInstance model = new ExtraDataModelInstance(item);
+
+            ExtraModelTier tier =model.getTier();
+            if (!tier.isMax()) {
+                if (upgradeModuleStack) model.setData(model.getNextTierData());
+                else {
+                    int newData = model.getData() + model.getDataPerKill() * (upgradeDataKill ? ExtraHostileConfig.upgradeDataKill : 1);
+                    int resData = Math.min(newData, model.getNextTierData());
+                    model.setData(resData);
+                }
+            }
+
+            ExtraDataModelItem.setIters(item, ExtraDataModelItem.getIters(item) + (upgradeDataKill ? ExtraHostileConfig.upgradeDataKill : 1));
+            this.setChanged();
+        }
+    }
+
+    public int getEnergyStored() {
+        return this.energy.getEnergyStored();
+    }
+
+    public boolean getUpgradeDataKill(){
+        return upgradeDataKill;
+    }
+
+    public class SimulatorModelingItemHandler extends InternalItemHandler {
+        public SimulatorModelingItemHandler() {
+            super(SIZE_SLOTS);
+        }
+
+        @Override
+        public int getSlotLimit(int slot) {
+            return 1;
+        }
+
+        public boolean isItemValid(int slot, @NotNull ItemStack stack) {
+            if (slot == 0){
+                return (stack.getItem() instanceof DataModelItem && !new DataModelInstance(stack, 0).getTier().isMax()) ||
+                        (stack.getItem() instanceof ExtraDataModelItem && !new ExtraDataModelInstance(stack).getTier().isMax());
+            }
+
+            return slot >= 1 && slot < SIZE_SLOTS && stack.getItem() instanceof UpgradeMachine;
+        }
+
+        public @NotNull ItemStack insertItem(int slot, @NotNull ItemStack stack, boolean simulate) {
+            if (!EHNNUtils.allowedTier(stack) || !EHNNUtils.allowedBlackListModel(stack)) return stack;
+            return super.insertItem(slot, stack, simulate);
+        }
+
+        public @NotNull ItemStack extractItem(int slot, int amount, boolean simulate) {
+            if (slot == 0){
+                ItemStack stack = SimulationModelingTileEntity.this.inventory.getStackInSlot(0);
+
+                if ((stack.getItem() instanceof DataModelItem && new DataModelInstance(stack, 0).getTier().isMax()) ||
+                        (stack.getItem() instanceof ExtraDataModelItem && new ExtraDataModelInstance(stack).getTier().isMax()) ){
+                    return super.extractItem(slot, amount, simulate);
+                }
+            }
+            return ItemStack.EMPTY;
+        }
+
+        protected void onContentsChanged(int slot) {
+            SimulationModelingTileEntity.this.setChanged();
+            if (slot >= 1 && slot < 3) SimulationModelingTileEntity.this.checkUpgrade();
+            SimulationModelingTileEntity.this.startCraft = true;
+        }
+
+        public NonNullList<ItemStack> getItems() {
+            return this.stacks;
+        }
+    }
+    @Override
+    public void preRemoveSideEffects(net.minecraft.core.BlockPos pos, net.minecraft.world.level.block.state.BlockState state) {
+        net.minecraft.world.Containers.dropContents(this.level, pos, this.inventory.getItems());
+        super.preRemoveSideEffects(pos, state);
+    }
+}
