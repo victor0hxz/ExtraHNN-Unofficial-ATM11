@@ -1,11 +1,11 @@
 <!-- VERSION-LOCKED-PUBLICATION:START -->
 # Extra Hostile Neural Networks: Version Locked
 
-<img src="https://raw.githubusercontent.com/victor0hxz/ExtraHNN-Unofficial-ATM11/main/publication/LOGO-VERSION-LOCKED.png" alt="Extra Hostile Neural Networks: Version Locked" width="480" />
+<img src="https://raw.githubusercontent.com/victor0hxz/ExtraHNN-Version-Locked/main/publication/BANNER-VERSION-LOCKED.png" alt="Extra Hostile Neural Networks: Version Locked" width="100%" />
 
 **Minecraft 26.1.2 · NeoForge · Java 25**
 
-[CurseForge](https://www.curseforge.com/minecraft/mc-mods/extra-hostile-neural-networks-unofficial-atm11) · [Downloads](https://github.com/victor0hxz/ExtraHNN-Unofficial-ATM11/releases) · [Source](https://github.com/victor0hxz/ExtraHNN-Unofficial-ATM11) · [Report an issue](https://github.com/victor0hxz/ExtraHNN-Unofficial-ATM11/issues)
+[CurseForge](https://www.curseforge.com/minecraft/mc-mods/extra-hostile-neural-networks-unofficial-atm11) · [Downloads](https://github.com/victor0hxz/ExtraHNN-Version-Locked/releases) · [Source](https://github.com/victor0hxz/ExtraHNN-Version-Locked) · [Report an issue](https://github.com/victor0hxz/ExtraHNN-Version-Locked/issues)
 
 An unofficial community port for Minecraft 26.1.2 and NeoForge.
 
@@ -33,7 +33,7 @@ This port does not claim ownership of the original code, artwork or assets. The 
 
 ## 🛠️ Bugs and compatibility
 
-Please report port-specific issues at https://github.com/victor0hxz/ExtraHNN-Unofficial-ATM11/issues. Include your Minecraft and NeoForge versions, installed mod list, relevant logs and any crash report. Compatibility with every mod combination has not been verified.
+Please report port-specific issues at https://github.com/victor0hxz/ExtraHNN-Version-Locked/issues. Include your Minecraft and NeoForge versions, installed mod list, relevant logs and any crash report. Compatibility with every mod combination has not been verified.
 
 ## 🧪 ATM11 compatibility
 
@@ -46,7 +46,7 @@ This distribution was prepared for the ATM11 compatibility project. See the GitH
 - Java: 25
 - Project type: unofficial community port
 - License: MIT
-- GitHub, downloads and source documentation: https://github.com/victor0hxz/ExtraHNN-Unofficial-ATM11
+- GitHub, downloads and source documentation: https://github.com/victor0hxz/ExtraHNN-Version-Locked
 - Installation: replace older copies of this mod and avoid duplicate mod IDs.
 
 Thank you to LMor and nexxx_7 for the original project.
@@ -57,7 +57,7 @@ Thank you to LMor and nexxx_7 for the original project.
 
 ## Build and port documentation
 
-# Extra Hostile Neural Networks - Unofficial ATM11 Compatibility Port
+# Extra Hostile Neural Networks Version Locked
 
 Unofficial fan-maintained adaptation by victor0hxz for **ATM11 0.9.0 / Minecraft 26.1.2 / NeoForge 26.1.2.109 / Java 25**. This project is not affiliated with or endorsed by the original authors or the ATM team.
 
@@ -67,7 +67,7 @@ Original authors: **LMor and nexxx_7**. [Upstream project](https://github.com/le
 
 ## Installation
 
-Download the JAR from [Releases](https://github.com/victor0hxz/ExtraHNN-Unofficial-ATM11/releases), install the matching dependencies, and replace any older copy of the same mod. Do not install this build alongside the original mod: the mod ID is preserved. These builds target 26.1.2; they are not 1.21.1 builds.
+Download the JAR from [Releases](https://github.com/victor0hxz/ExtraHNN-Version-Locked/releases), install the matching dependencies, and replace any older copy of the same mod. Do not install this build alongside the original mod: the mod ID is preserved. These builds target 26.1.2; they are not 1.21.1 builds.
 
 Dependencies tested: Hostile Neural Networks 7.0.0; Placebo 10.0.2.
 

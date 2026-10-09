@@ -1,10 +1,10 @@
 # Extra Hostile Neural Networks: Version Locked
 
-<img src="https://raw.githubusercontent.com/victor0hxz/ExtraHNN-Unofficial-ATM11/main/publication/LOGO-VERSION-LOCKED.png" alt="Extra Hostile Neural Networks: Version Locked" width="480" />
+<img src="https://raw.githubusercontent.com/victor0hxz/ExtraHNN-Version-Locked/main/publication/BANNER-VERSION-LOCKED.png" alt="Extra Hostile Neural Networks: Version Locked" width="100%" />
 
 **Minecraft 26.1.2 · NeoForge · Java 25**
 
-[CurseForge](https://www.curseforge.com/minecraft/mc-mods/extra-hostile-neural-networks-unofficial-atm11) · [Downloads](https://github.com/victor0hxz/ExtraHNN-Unofficial-ATM11/releases) · [Source](https://github.com/victor0hxz/ExtraHNN-Unofficial-ATM11) · [Report an issue](https://github.com/victor0hxz/ExtraHNN-Unofficial-ATM11/issues)
+[CurseForge](https://www.curseforge.com/minecraft/mc-mods/extra-hostile-neural-networks-unofficial-atm11) · [Downloads](https://github.com/victor0hxz/ExtraHNN-Version-Locked/releases) · [Source](https://github.com/victor0hxz/ExtraHNN-Version-Locked) · [Report an issue](https://github.com/victor0hxz/ExtraHNN-Version-Locked/issues)
 
 An unofficial community port for Minecraft 26.1.2 and NeoForge.
 
@@ -32,7 +32,7 @@ This port does not claim ownership of the original code, artwork or assets. The 
 
 ## 🛠️ Bugs and compatibility
 
-Please report port-specific issues at https://github.com/victor0hxz/ExtraHNN-Unofficial-ATM11/issues. Include your Minecraft and NeoForge versions, installed mod list, relevant logs and any crash report. Compatibility with every mod combination has not been verified.
+Please report port-specific issues at https://github.com/victor0hxz/ExtraHNN-Version-Locked/issues. Include your Minecraft and NeoForge versions, installed mod list, relevant logs and any crash report. Compatibility with every mod combination has not been verified.
 
 ## 🧪 ATM11 compatibility
 
@@ -45,7 +45,7 @@ This distribution was prepared for the ATM11 compatibility project. See the GitH
 - Java: 25
 - Project type: unofficial community port
 - License: MIT
-- GitHub, downloads and source documentation: https://github.com/victor0hxz/ExtraHNN-Unofficial-ATM11
+- GitHub, downloads and source documentation: https://github.com/victor0hxz/ExtraHNN-Version-Locked
 - Installation: replace older copies of this mod and avoid duplicate mod IDs.
 
 Thank you to LMor and nexxx_7 for the original project.
