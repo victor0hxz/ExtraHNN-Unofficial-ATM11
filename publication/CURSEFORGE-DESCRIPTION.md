@@ -34,17 +34,6 @@ This port does not claim ownership of the original code, artwork or assets. The 
 
 Please report port-specific issues at https://github.com/victor0hxz/ExtraHNN-Unofficial-ATM11/issues. Include your Minecraft and NeoForge versions, installed mod list, relevant logs and any crash report. Compatibility with every mod combination has not been verified.
 
----
-
-## 🧩 Explore the Version Locked collection
-
-The related Mekanism ports for Minecraft 26.1.2 are available here:
-
-- [Mekanism: Version Locked](https://www.curseforge.com/minecraft/mc-mods/mekanism-version-locked)
-- [Mekanism: Tools Version Locked](https://www.curseforge.com/minecraft/mc-mods/mekanism-tools-version-locked)
-- [Mekanism: Generators Version Locked](https://www.curseforge.com/minecraft/mc-mods/mekanism-generators-version-locked)
-- [Mekanism: Additions Version Locked](https://www.curseforge.com/minecraft/mc-mods/mekanism-additions-version-locked)
-
 ## 🧪 ATM11 compatibility
 
 This distribution was prepared for the ATM11 compatibility project. See the GitHub port report for the validation performed on this build. Further testing in your full modpack is required; compatibility with future pack releases is not guaranteed.
