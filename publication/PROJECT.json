@@ -1,0 +1,31 @@
+{
+  "name": "Extra Hostile Neural Networks - Unofficial ATM11 Compatibility Port",
+  "summary": "Unofficial fan compatibility adaptation of Extra Hostile Neural Networks for Minecraft 26.1.2 and ATM11 0.9.0.",
+  "game": "Minecraft",
+  "class": "Mods",
+  "mainCategory": "Technology",
+  "additionalCategories": [
+    "Addons"
+  ],
+  "license": "MIT",
+  "sourceUrl": "https://github.com/victor0hxz/ExtraHNN-Unofficial-ATM11",
+  "issuesUrl": "https://github.com/victor0hxz/ExtraHNN-Unofficial-ATM11/issues",
+  "releaseType": "beta",
+  "gameVersions": [
+    "26.1.2"
+  ],
+  "modLoader": "NeoForge",
+  "javaVersion": 25,
+  "dependenciesNotes": "Hostile Neural Networks 7.0.0; Placebo 10.0.2",
+  "upstream": "https://github.com/lentel27/Extra-Hostile-Neural-Networks",
+  "originalAuthors": "LMor and nexxx_7",
+  "jar": "extrahnn-26.1.2-2.2.5-port1-atm11-0.9.0.jar",
+  "sha256": "650266bae7ed2ca60fe305de73c31433088e00f3d3cefa1554e80977faa65442",
+  "status": "Created; portal status New; file uploads not yet verified",
+  "packagingNotes": "Original MIT license embedded in META-INF for standalone CurseForge distribution; production bytecode unchanged from tested GitHub build.",
+  "projectId": 1734575,
+  "slug": "extra-hostile-neural-networks-unofficial-atm11",
+  "curseforgeUrl": "https://www.curseforge.com/minecraft/mc-mods/extra-hostile-neural-networks-unofficial-atm11",
+  "publicationTitle": "Extra Hostile Neural Networks: Version Locked",
+  "logoSubtitle": "VERSION LOCKED"
+}
