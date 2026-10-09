@@ -21,11 +21,15 @@
   "originalAuthors": "LMor and nexxx_7",
   "jar": "extrahnn-26.1.2-2.2.5-port1-atm11-0.9.0.jar",
   "sha256": "650266bae7ed2ca60fe305de73c31433088e00f3d3cefa1554e80977faa65442",
-  "status": "Created; portal status New; file uploads not yet verified",
+  "status": "JAR uploaded; moderation status not independently verified",
   "packagingNotes": "Original MIT license embedded in META-INF for standalone CurseForge distribution; production bytecode unchanged from tested GitHub build.",
   "projectId": 1734575,
   "slug": "extra-hostile-neural-networks-unofficial-atm11",
   "curseforgeUrl": "https://www.curseforge.com/minecraft/mc-mods/extra-hostile-neural-networks-unofficial-atm11",
   "publicationTitle": "Extra Hostile Neural Networks: Version Locked",
-  "logoSubtitle": "VERSION LOCKED"
+  "logoSubtitle": "VERSION LOCKED",
+  "fileId": 9105086,
+  "fileUrl": "https://www.curseforge.com/minecraft/mc-mods/extra-hostile-neural-networks-unofficial-atm11/files/9105086",
+  "pendingRelations": [],
+  "profileLogoStatus": "Version Locked PNG published on GitHub; native CurseForge logo replacement not confirmed"
 }
