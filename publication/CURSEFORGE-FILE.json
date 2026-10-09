@@ -1,0 +1,16 @@
+{
+  "projectId": 1734575,
+  "fileId": 9105086,
+  "fileName": "extrahnn-26.1.2-2.2.5-port1-atm11-0.9.0.jar",
+  "sha256": "650266bae7ed2ca60fe305de73c31433088e00f3d3cefa1554e80977faa65442",
+  "uploadedAtUtc": "2026-10-09T05:33:49.3134848Z",
+  "deferredRelations": [],
+  "gameVersions": [
+    16082,
+    10150,
+    9638,
+    9639
+  ],
+  "fileUrl": "https://www.curseforge.com/minecraft/mc-mods/extra-hostile-neural-networks-unofficial-atm11/files/9105086",
+  "status": "Uploaded; moderation approval must be checked in author portal"
+}
